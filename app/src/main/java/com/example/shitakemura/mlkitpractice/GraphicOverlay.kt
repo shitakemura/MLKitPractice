@@ -76,7 +76,7 @@ class GraphicOverlay(context: Context, attrs: AttributeSet) : View(context, attr
                             canvas.drawText(graphic.text, rect.left, rect.bottom, textPaint)
                         }
                     }
-                    is TextData -> {
+                    is TextsData -> {
                         val offset = textPaint.textSize * 1.5f
                         val left = textPaint.textSize * 0.5f
                         var bottom = offset

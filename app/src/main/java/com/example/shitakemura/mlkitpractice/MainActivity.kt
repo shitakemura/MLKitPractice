@@ -5,7 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.ArrayAdapter
+import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.math.max
 
@@ -69,16 +72,105 @@ class MainActivity : AppCompatActivity(), ImagePickFragment.ImagePickListener {
         val detectorName = detectorSpinner.selectedItem as String
         when (detectorName) {
             TEXT_DETECTION -> {
+                detectButton.isEnabled = false
+                progressBar.visibility = View.VISIBLE
 
+                val image = FirebaseVisionImage.fromBitmap(bitmap)
+
+                FirebaseVision.getInstance()
+                        .visionTextDetector
+                        .detectInImage(image)
+                        .addOnSuccessListener { texts ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+
+                            for (block in texts.blocks) {
+                                for (line in block.lines) {
+                                    for (element in line.elements) {
+                                        element.boundingBox?.let {
+                                            overlay.add(BoxData(element.text, it))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+                            e.printStackTrace()
+                        }
             }
             FACE_DETECTION -> {
+                detectButton.isEnabled = false
+                progressBar.visibility = View.VISIBLE
+
+                val image = FirebaseVisionImage.fromBitmap(bitmap)
+
+                FirebaseVision.getInstance()
+                        .visionFaceDetector
+                        .detectInImage(image)
+                        .addOnSuccessListener {faces ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+
+                            for (face in faces) {
+                                face.boundingBox?.let {
+                                    overlay.add(BoxData("", it))
+                                }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+                            e.printStackTrace()
+                        }
 
             }
             BARCODE_DETECTION -> {
+                detectButton.isEnabled = false
+                progressBar.visibility = View.VISIBLE
 
+                val image = FirebaseVisionImage.fromBitmap(bitmap)
+
+                FirebaseVision.getInstance()
+                        .visionBarcodeDetector
+                        .detectInImage(image)
+                        .addOnSuccessListener { barcodes ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+
+                            for (barcode in barcodes) {
+                                barcode.boundingBox?.let {
+                                    overlay.add(BoxData(barcode.rawValue ?: "", it))
+                                }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+                            e.printStackTrace()
+                        }
             }
             LABELING -> {
+                detectButton.isEnabled = false
+                progressBar.visibility = View.VISIBLE
 
+                val image = FirebaseVisionImage.fromBitmap(bitmap)
+
+                FirebaseVision.getInstance()
+                        .visionLabelDetector
+                        .detectInImage(image)
+                        .addOnSuccessListener { labels ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+
+                            overlay.add(TextsData(labels.map { "${it.label}, ${it.confidence}" }))
+                        }
+                        .addOnFailureListener { e ->
+                            detectButton.isEnabled = true
+                            progressBar.visibility = View.GONE
+                            e.printStackTrace()
+                        }
             }
             CLOUD_TEXT_DETECTION -> {
 
